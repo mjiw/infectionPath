@@ -63,6 +63,14 @@ int main(int argc, const char * argv[]) {
     //1-3. FILE pointer close
     fclose(fp);
     
+    int innumber;
+    int outnumber;
+    //void *ifct_element2;
+    char inplace[20];
+    
+    int inplacehist[N_HISTORY];
+    int minage;
+    int maxage;
     
     int place1, place2;
     printf("the first place is %n");
@@ -87,12 +95,67 @@ int main(int argc, const char * argv[]) {
                 break;
                 
             case MENU_PATIENT:
+            	printf("환자 번호 입력:");
+            	scanf("%i",&innumber);
+            	ifct_element=ifctdb_getData(innumber);
             	
-                printf("age: %i\n",ifctele_getAge(ifct_element));
+				if(innumber==ifctele_getIndex(ifct_element)) {
+					printf("age: %i\n",ifctele_getAge(ifct_element));
+					printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
+					int i;
+					for(i=0;i<N_HISTORY;i++){
+						printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,i)));
+					}		
+				}  
                 break;
                 
             case MENU_PLACE:
-                
+                printf("장소 입력:");
+            	scanf("%s",&inplace);
+            	int i;
+            	int j;
+           		int t;
+            	for(i=0;i<ifctdb_len();i++){
+            			ifct_element=ifctdb_getData(i);
+            			
+            			for(j=0;j<N_HISTORY;j++){
+            				
+							if(strcmp(inplace,ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)))==0){
+									inplacehist[j]=ifctele_getHistPlaceIndex(ifct_element, j);
+									printf("age: %i\n",ifctele_getAge(ifct_element));
+									printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
+									printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)));
+							}
+								 // inplacehist[j]의 값 설정 부분 코드를 우선 수정을 해야 할듯 하네요.
+                                 //(아니면 printf로 출력하는 부분을 재고하던가 해야 할 것 같습니다.)
+							else{
+								continue;
+							}	
+							
+						}
+						
+						for(j=0;j<N_HISTORY;j++){
+							if(strcmp(inplace,ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)))==0){
+								printf("age: %i\n",ifctele_getAge(ifct_element));
+								printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
+					//			outnumber=ifctele_getIndex(ifct_element);
+					//			ifct_element2=ifctdb_getData(outnumber);
+								printf("move: %s\n",ifctele_getPlaceName(inplacehist[j]));
+					//				printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)));
+							}
+					//		else{
+							//	printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)));
+					//		}
+						//	printf("move: %s\n",ifctele_getPlaceName(inplacehist[j]));
+						}
+						
+					//	printf("age: %i\n",ifctele_getAge(ifct_element2));
+					//	printf("time: %i\n",ifctele_getinfestedTime(ifct_element2));
+					//	for(j=0;j<N_HISTORY;j++){
+					//		printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)));	
+					//	}
+				}
+            	
                 break;
                 
             case MENU_AGE:
