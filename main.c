@@ -64,7 +64,7 @@ int main(int argc, const char * argv[]) {
     fclose(fp);
     
     int innumber;
-    int outnumber;
+    int outnumber=1;
     //void *ifct_element2;
     char inplace[20];
     
@@ -73,6 +73,9 @@ int main(int argc, const char * argv[]) {
     int maxage;
     
     int place1, place2;
+    
+    
+    
     printf("the first place is %n");
 
     do {
@@ -115,46 +118,59 @@ int main(int argc, const char * argv[]) {
             	int i;
             	int j;
            		int t;
+           		int count=0;
             	for(i=0;i<ifctdb_len();i++){
-            			ifct_element=ifctdb_getData(i);
+            		ifct_element=ifctdb_getData(i);
             			
-            			for(j=0;j<N_HISTORY;j++){
-            				
-							if(strcmp(inplace,ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)))==0){
-									inplacehist[j]=ifctele_getHistPlaceIndex(ifct_element, j);
-									printf("age: %i\n",ifctele_getAge(ifct_element));
-									printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
-									printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)));
+            		for(j=0;j<N_HISTORY;j++){		
+						if(strcmp(inplace,ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)))==0){
+						
+							for(t=0;t<N_HISTORY;t++){
+								inplacehist[t]=ifctele_getHistPlaceIndex(ifct_element, t);
 							}
-								 // inplacehist[j]의 값 설정 부분 코드를 우선 수정을 해야 할듯 하네요.
-                                 //(아니면 printf로 출력하는 부분을 재고하던가 해야 할 것 같습니다.)
-							else{
-								continue;
-							}	
+							inplacehist[j]=ifctele_getHistPlaceIndex(ifct_element, j);
+							outnumber=ifctele_getIndex(ifct_element);
+							count++;
+						}
+							
+						else if(ifctele_getIndex(ifct_element)==outnumber){
+							inplacehist[j]=ifctele_getHistPlaceIndex(ifct_element, j);
 							
 						}
+						else{
+							count=0;
+							continue;
+						}		
+					}
 						
-						for(j=0;j<N_HISTORY;j++){
-							if(strcmp(inplace,ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)))==0){
-								printf("age: %i\n",ifctele_getAge(ifct_element));
-								printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
-					//			outnumber=ifctele_getIndex(ifct_element);
-					//			ifct_element2=ifctdb_getData(outnumber);
-								printf("move: %s\n",ifctele_getPlaceName(inplacehist[j]));
-					//				printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)));
-							}
-					//		else{
-							//	printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)));
-					//		}
-						//	printf("move: %s\n",ifctele_getPlaceName(inplacehist[j]));
+					if(count==0){
+						continue;
+					}
+					else if(count!=0){
+						printf("%i",count);
+						printf("age: %i\n",ifctele_getAge(ifct_element));
+						printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
+					}
+					
+					for(j=0;j<N_HISTORY;j++){
+			
+						if(count!=0){
+							printf("move: %s\n",ifctele_getPlaceName(inplacehist[j]));
 						}
-						
-					//	printf("age: %i\n",ifctele_getAge(ifct_element2));
-					//	printf("time: %i\n",ifctele_getinfestedTime(ifct_element2));
-					//	for(j=0;j<N_HISTORY;j++){
-					//		printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)));	
-					//	}
+						else{
+							break;
+						}
+					}
+					count=0;
 				}
+				
+			//	if(count!=0){		
+			//			printf("move: %s\n",ifctele_getPlaceName(inplacehist[0]));
+			//			printf("move: %s\n",ifctele_getPlaceName(inplacehist[1]));
+			//			printf("move: %s\n",ifctele_getPlaceName(inplacehist[2]));
+			//			printf("move: %s\n",ifctele_getPlaceName(inplacehist[3]));
+			//			printf("move: %s\n",ifctele_getPlaceName(inplacehist[4]));
+		//		}
             	
                 break;
                 
@@ -170,9 +186,9 @@ int main(int argc, const char * argv[]) {
                 printf("[ERROR Wrong menu selection! (%i), please choose between 0 ~ 4\n", menu_selection);
                 break;
         }
-    
     } while(menu_selection != 0);
     
     
     return 0;
 }
+
