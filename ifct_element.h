@@ -18,4 +18,5 @@ int ifctele_getHistPlaceIndex(void* obj, int index);
 unsigned int ifctele_getinfestedTime(void* obj);
 int ifctele_getAge(void* obj);
 void ifctele_printElement(void* obj);
+
 #endif /* ifct_element_h */
