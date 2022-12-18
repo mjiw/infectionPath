@@ -19,10 +19,86 @@
 #define TIME_HIDE           2
 
 
-//int trackInfecter(int patient_no, int *detected_time, int *place){
-	
-//}
+int convertTimeToIndex(int time, int infectedTime){ //시점 값을 통해 장소배열의 index를 산출하는 함수 
+    int index=-1;
+    if(time<=infectedTime && time>infectedTime-N_HISTORY){
+        index=N_HISTORY-(infectedTime-time)-1;
+	}
+	return index;
+}
 
+int isMet(int innumber2, int inumber){ //만난장소를 찾아요 
+    int i;
+    int j; 
+    int flag=0;
+    void *ifct_element;
+    void *now_element;
+    
+    int now_movedate;
+    int ifct_movedate;
+    int people; //현재환자에게 전파한 사람
+    int metdate;
+    
+    now_element=ifctdb_getData(innumber2); //현재환자에 대한 데이터 
+    ifct_element=ifctdb_getData(inumber); //비교대상환자에 대한 데이터 
+					
+	for(i=2;i<N_HISTORY;i++){ //1번 기준 10,9,8 
+		now_movedate=ifctele_getinfestedTime(now_element)-i; //현재환자 장소별 시점 
+		
+		for(j=3;j<N_HISTORY;j++){ 
+			ifct_movedate=ifctele_getinfestedTime(ifct_element)-(4-j);//비교환자 장소별 시점 
+			if(ifctele_getHistPlaceIndex(now_element, convertTimeToIndex(now_movedate,ifctele_getinfestedTime(now_element)))==ifctele_getHistPlaceIndex(ifct_element, j)){
+				if(now_movedate==ifct_movedate){
+					people=ifctele_getIndex(ifct_element); //현재환자에게 전파한 사람 
+					metdate=now_movedate; //현재환자와 전파자가 만난시점 
+					flag++;
+				}
+					
+			}							
+		
+			else{
+				continue;
+				}
+						
+		}	
+	}
+					
+	if(flag==0){
+		metdate=-1;
+	}
+									
+	return metdate; //만난 시점 반환 
+}
+
+int trackInfecter(int innumber2){ //전파자를 찾아요 
+	int i;
+	int j;
+	
+	void *ifct_element;
+	void *now_element;
+	
+	int mettime2;
+	int firstpeople1;
+	
+	
+	for(i=0;i<ifctdb_len();i++){//비교대상 환자 반복문 
+		ifct_element=ifctdb_getData(i);					
+		mettime2=isMet(innumber2,ifctele_getIndex(ifct_element)); //현재환자의 전파자 만난 날 찾기	
+											
+		if(mettime2>0){ //만났다면 		
+			firstpeople1=i; //전파자 
+			break;		
+		}
+		
+		else{
+			firstpeople1=-1; //전파자가 없는 경우(최초전파자) 
+		}		
+	}
+	
+	return firstpeople1;
+}
+				
+				
 int main(int argc, const char * argv[]) {
     
     int menu_selection;
@@ -82,8 +158,10 @@ int main(int argc, const char * argv[]) {
     int place1, place2;
     
     void *now_element;
-    int metdate;
-    int mettime1=-1;
+    
+	int metdate;
+    char metplace;
+    
     int mettime2;
     
     int now_movedate;
@@ -187,116 +265,31 @@ int main(int argc, const char * argv[]) {
                 
             case MENU_TRACK:
             	//지정된 롼자를 시작으로 전파자와 감염당한 시점 및 장소를 순차적 출력, 최종전파자 출력 
-            //	printf("현재환자를 입력하시오:");
-            //	scanf("%i",&innumber2);
-            //	now_element=ifctdb_getData(innumber2); //현재환자에 대한 데이터-현재환자의 2~4일전 이동장소와 비교대상환자의 당일과 1일전 비교 
-            //	int flag=0;
-				int convertTimeToIndex(int time, int infectedTime){ //시점 값을 통해 장소배열의 index를 산출하는 함수 
-            		int index=-1;
-            		if(time<=infectedTime && time>infectedTime-N_HISTORY){
-            			index=N_HISTORY-(infectedTime-time)-1;
-					}
-					return index;
-				}
-				
-            	//두환자의 장소별 시점 계산 -> 비교잘됨 
-				int isMet(int innumber2, int inumber){ //만난장소를 찾아요 
-            		int i;
-            		int j; 
-            		int flag=0;
-            		ifct_element=ifctdb_getData(inumber);//비교대상환자에 대한 데이터 
-					
-					for(i=2;i<N_HISTORY;i++){
-						now_movedate=ifctele_getinfestedTime(now_element)-i; //현재환자 장소별 시점 
-						printf("%i\n",now_movedate);
-						for(j=3;j<N_HISTORY;j++){
-							ifct_movedate=ifctele_getinfestedTime(ifct_element)-(4-j);//비교환자 장소별 시점 
-							if(ifctele_getHistPlaceIndex(now_element, convertTimeToIndex(now_movedate,ifctele_getinfestedTime(now_element)))==ifctele_getHistPlaceIndex(ifct_element, j)){
-								if(now_movedate==ifct_movedate){
-									people=ifctele_getIndex(ifct_element); //현재환자에게 전파한 사람 
-									flag++;
-									metdate=ifct_movedate;
-									printf("%i\n",metdate);
-								}
-								
-								else{
-									printf("!\n");
-									
-								}
-							
-							//	printf("%i\n",ifctele_getHistPlaceIndex(now_element, convertTimeToIndex(movedate,ifctele_getinfestedTime(now_element))));
-							//	printf("%i\n",convertTimeToIndex(movedate,ifctele_getinfestedTime(now_element)));
-							//	printf("%i\n",ifctele_getHistPlaceIndex(ifct_element, j));
-								
-							
-							}
-							else{
-							//	printf("!\n");
-								continue;
-							}
-							
-						}	
-					}
-					
-					if(flag==0){
-						metdate=-1;
-					}
-										
-					return metdate;
-				}
-				 
-				 
-            	int trackInfecter(int innumber2){ //전파자를 찾아요 
-					int i;
-					int j;
-					for(i=0;i<ifctdb_len();i++){//비교대상 환자 반복문 
-						ifct_element=ifctdb_getData(i);
-						
-						mettime2=isMet(innumber2,ifctele_getIndex(ifct_element)); //현재환자의  전파자 
-					
-						
-						printf("==>%i\n",mettime2);
-				
-						
-						if(mettime2>0){	
-							firstpeople1=people;
-						}
-						else{
-							firstpeople1=-1;
-						}		
-					}
-					return firstpeople1;
-				}
-				
-				printf("현재환자를 입력하시오:");
-            	scanf("%i",&innumber2);
-            	now_element=ifctdb_getData(innumber2);
-            	
-				firstpeople=trackInfecter(innumber2);
-				printf("%i\n",firstpeople);
-				
-				if(firstpeople!=-1){
-					printf("%i번 환자는 %i환자에게 전파됨\n",innumber2,firstpeople);
-				}
-				else{
-					firstpeople=innumber2;
-					innumber2=-1; //최초전파자
-					printf("%i번 환자는 최초전파자이다\n",firstpeople);
-				}
-					
-				innumber2=firstpeople;
-				
-				printf("%i\n",innumber2); 
-				
-				firstpeople=trackInfecter(innumber2);
-//				printf("%i\n",firstpeople); 
-				
+            	printf("현재환자를 입력하시오:");
+            	scanf("%i",&innumber2); 
 		
-/*				while(innumber2!=-1){
-					firstpeople=trackInfecter(innumber2);
+				while(innumber2!=-1){
+					now_element=ifctdb_getData(innumber2);//현재환자에 대한 데이터
+					firstpeople=trackInfecter(innumber2); //전파자 
 					
 					if(firstpeople!=-1){
-						printf("%i환자는 %i환자에게 전파됨\n",innumber2,firstpeople);
+						printf("%i번환자는 %i번 환자에게 전파됨\n",innumber2,firstpeople);
+						int i;
+						for(i=0;i<ifctdb_len();i++){ //감염당한 시점과 장소 출력을 위한 반복문 
+							ifct_element=ifctdb_getData(i);
+							metdate=isMet(innumber2,i);
+	
+							if(metdate>0){ //만났다면 	
+							
+								printf("%i일에 %s에서 감염됨\n",metdate,ifctele_getPlaceName(ifctele_getHistPlaceIndex(now_element,convertTimeToIndex(metdate,ifctele_getinfestedTime(now_element)))));
+								break;		
+							}
+		
+							else{
+								firstpeople1=-1; //전파자가 없는 경우(최초전파자) 
+							}		
+						}
+						
 						innumber2=firstpeople;
 					}
 					else{
@@ -304,11 +297,9 @@ int main(int argc, const char * argv[]) {
 						innumber2=-1; //최초전파자
 						printf("%i번 환자는 최초전파자이다\n",firstpeople); 
 					}
-
-			
-				} */
-                
-				//전파자와 감염당한 시점 및 장소 순차적 출력, 최종전파자 최종적으로 출력  
+		
+				} 
+                		 
                 break;
                 
             default:
