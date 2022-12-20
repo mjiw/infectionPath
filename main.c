@@ -169,7 +169,10 @@ int main(int argc, const char * argv[]) {
    
     int people;
     int flag;
-    printf("the first place is %n");
+
+	int age_min;
+	int age_max;
+	int i;
 
     do {
         printf("\n=============== INFECTION PATH MANAGEMENT PROGRAM (No. of patients : %i) =============\n", ifctdb_len());
@@ -208,7 +211,7 @@ int main(int argc, const char * argv[]) {
             case MENU_PLACE:
                 printf("장소 입력:");
             	scanf("%s",&inplace);
-            	int i;
+            //	int i;
             	int j;
            		int t;
            		int count=0;
@@ -260,8 +263,27 @@ int main(int argc, const char * argv[]) {
                 break;
                 
             case MENU_AGE:
-                
-                break;
+                printf("나이의 최솟값 입력:");
+                scanf("%i",&age_min);              
+                printf("나이의 최댓값 입력:");
+				scanf("%i",&age_max); 
+//				int i;
+				for(i=0;i<ifctdb_len();i++){
+					ifct_element=ifctdb_getData(i);
+					if(age_min<=ifctele_getAge(ifct_element)){
+						if(age_max>=ifctele_getAge(ifct_element)){
+							printf("age: %i\n",ifctele_getAge(ifct_element));
+							printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
+							
+							int j;
+							for(j=0;j<N_HISTORY;j++){
+								printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)));
+							}
+						}
+					}
+				}
+				
+            	break;
                 
             case MENU_TRACK:
             	//지정된 롼자를 시작으로 전파자와 감염당한 시점 및 장소를 순차적 출력, 최종전파자 출력 
