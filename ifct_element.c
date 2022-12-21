@@ -132,12 +132,12 @@ void ifctele_printElement(void* obj){
 	ifs_ele_t* strPtr=(ifs_ele_t*)obj;
 
 	int j;
-	printf("%i",strPtr->number);
-	printf("%i",strPtr->age);
-	printf("%i",strPtr->date);
+	printf("%i ",strPtr->number);
+	printf("%i ",strPtr->age);
+	printf("%i ",strPtr->date);
 		
 	for(j=0;j<N_HISTORY;j++){
-		printf("%s", countryName[strPtr->move[j]]);
+		printf("%s ", countryName[strPtr->move[j]]);
 	}
 			
 }

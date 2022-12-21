@@ -27,7 +27,7 @@ int convertTimeToIndex(int time, int infectedTime){ //시점 값을 통해 장소배열의 
 	return index;
 }
 
-int isMet(int innumber2, int inumber){ //만난장소를 찾아요 
+int isMet(int innumber2, int inumber){ //만난시점을 찾는 함수 
     int i;
     int j; 
     int flag=0;
@@ -36,66 +36,80 @@ int isMet(int innumber2, int inumber){ //만난장소를 찾아요
     
     int now_movedate;
     int ifct_movedate;
-    int people; //현재환자에게 전파한 사람
     int metdate;
     
     now_element=ifctdb_getData(innumber2); //현재환자에 대한 데이터 
     ifct_element=ifctdb_getData(inumber); //비교대상환자에 대한 데이터 
 					
-	for(i=2;i<N_HISTORY;i++){ //1번 기준 10,9,8 
-		now_movedate=ifctele_getinfestedTime(now_element)-i; //현재환자 장소별 시점 
+	for(i=2;i<N_HISTORY;i++){ // 입력한 환자의 2,3,4일 전 장소 반복문 
+		now_movedate=ifctele_getinfestedTime(now_element)-i; //현재환자 장소별 시점(2,3,4일 전 시점계산) 
 		
-		for(j=3;j<N_HISTORY;j++){ 
-			ifct_movedate=ifctele_getinfestedTime(ifct_element)-(4-j);//비교환자 장소별 시점 
-			if(ifctele_getHistPlaceIndex(now_element, convertTimeToIndex(now_movedate,ifctele_getinfestedTime(now_element)))==ifctele_getHistPlaceIndex(ifct_element, j)){
-				if(now_movedate==ifct_movedate){
-					people=ifctele_getIndex(ifct_element); //현재환자에게 전파한 사람 
+		for(j=3;j<N_HISTORY;j++){  //비교할 환자의 1일전, 당일 장소 (전파시킬 수 있는 시점) 반복문 
+			ifct_movedate=ifctele_getinfestedTime(ifct_element)-(4-j);//비교환자 장소별 시점 (1일 전,당일 시점 계산)
+			
+			if(ifctele_getHistPlaceIndex(now_element, convertTimeToIndex(now_movedate,ifctele_getinfestedTime(now_element)))==ifctele_getHistPlaceIndex(ifct_element, j)){ //입력한 환자와 비교환자의 장소가 같을 때 
+				if(now_movedate==ifct_movedate){ //시점도 같을 때 
 					metdate=now_movedate; //현재환자와 전파자가 만난시점 
-					flag++;
-				}
-					
+					flag++; // 만난시점 반환을 위한 표시 
+				}		
 			}							
 		
-			else{
+			else{ //입력한 환자와 비교환자의 장소가 같지 않을 때 
 				continue;
 				}
 						
 		}	
 	}
 					
-	if(flag==0){
+	if(flag==0){ //입력한 환자에게 전파한 환자가 없는 경우 
 		metdate=-1;
 	}
 									
 	return metdate; //만난 시점 반환 
 }
 
-int trackInfecter(int innumber2){ //전파자를 찾아요 
+int trackInfecter(int innumber2){ //전파자를 찾는 함수 
 	int i;
 	int j;
 	
 	void *ifct_element;
 	void *now_element;
 	
-	int mettime2;
+	int metdate;
+	int min=-1;
+	int firstpeople;
 	int firstpeople1;
 	
 	
 	for(i=0;i<ifctdb_len();i++){//비교대상 환자 반복문 
 		ifct_element=ifctdb_getData(i);					
-		mettime2=isMet(innumber2,ifctele_getIndex(ifct_element)); //현재환자의 전파자 만난 날 찾기	
-											
-		if(mettime2>0){ //만났다면 		
-			firstpeople1=i; //전파자 
-			break;		
+		metdate=isMet(innumber2,ifctele_getIndex(ifct_element)); //현재환자와 환자들 비교해서 전파자 만난 날 찾기	
+									
+		if(metdate>0){ //만났다면
+		//만난 환자 중 가장 이른 시간에 만난 환자 찾기 
+			if(min==-1){
+				min=metdate;
+				firstpeople=i;
+				firstpeople1=i;
+				break;
+			}
+			else if(metdate>min){
+				firstpeople=firstpeople1;
+				break;
+			}
+			else if(min>metdate){
+				firstpeople=i;
+				break;
+			} 
+
 		}
 		
 		else{
-			firstpeople1=-1; //전파자가 없는 경우(최초전파자) 
+			firstpeople=-1; //전파자가 없는 경우(최초전파자) 
 		}		
 	}
 	
-	return firstpeople1;
+	return firstpeople; //전파자의 번호 반환 
 }
 				
 				
@@ -141,37 +155,25 @@ int main(int argc, const char * argv[]) {
     //1-3. FILE pointer close
     fclose(fp);
     
-    int innumber;
-    int outnumber=1;
-    //void *ifct_element2;
-    char inplace[20];
+    int innumber; //menu 1번에서 입력받는 환자정보 저장 
     
-    int innumber2;
-    int firstpeople;
-    int firstpeople1;
-    
-    
-    int inplacehist[N_HISTORY];
-    int minage;
-    int maxage;
-    
-    int place1, place2;
-    
-    void *now_element;
-    
-	int metdate;
-    char metplace;
-    
-    int mettime2;
-    
-    int now_movedate;
-    int ifct_movedate;
-   
-    int people;
-    int flag;
+    //menu 2번에서 사용되는 변수 
+    int outnumber; //입력한 장소가 있는 환자 번호 저장 
+    char inplace[20]; //입력받는 장소 저장 
+    int inplacehist[N_HISTORY]; //입력한 장소가 있는 환자 정보에 대한 5개 장소 저장 
 
+	//menu 3번에 사용되는 변수 
 	int age_min;
 	int age_max;
+	
+    //menu 4번에 사용되는 변수 
+    void *now_element;
+    int innumber2;
+    int firstpeople; 
+	int metdate;
+    int people;
+   
+	//case문마다 반복문에 사용되는 변수 
 	int i;
 
     do {
@@ -196,70 +198,64 @@ int main(int argc, const char * argv[]) {
             case MENU_PATIENT:
             	printf("환자 번호 입력:");
             	scanf("%i",&innumber);
-            	ifct_element=ifctdb_getData(innumber);
+            	ifct_element=ifctdb_getData(innumber); //입력한 환자번호의 정보 저장 
             	
-				if(innumber==ifctele_getIndex(ifct_element)) {
-					printf("age: %i\n",ifctele_getAge(ifct_element));
-					printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
-					int i;
-					for(i=0;i<N_HISTORY;i++){
-						printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,i)));
-					}		
-				}  
+            	//정보 출력 
+            	printf("index: %i\n",ifctele_getIndex(ifct_element));
+            	printf("age: %i\n",ifctele_getAge(ifct_element));
+				printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
+				
+				for(i=0;i<N_HISTORY;i++){ //최근 5개 이동장소 출력 
+					printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,i)));
+				}
+				
                 break;
                 
             case MENU_PLACE:
                 printf("장소 입력:");
             	scanf("%s",&inplace);
-            //	int i;
+            
             	int j;
            		int t;
            		int count=0;
-            	for(i=0;i<ifctdb_len();i++){
+            	for(i=0;i<ifctdb_len();i++){// 환자 정보 불러오는 반복문 
             		ifct_element=ifctdb_getData(i);
             			
-            		for(j=0;j<N_HISTORY;j++){		
-						if(strcmp(inplace,ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)))==0){
-						
+            		for(j=0;j<N_HISTORY;j++){	//5개의 장소 불러오는 반복문 	
+						if(strcmp(inplace,ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)))==0){	//입력한 장소가 환자정보에 있을때					
 							for(t=0;t<N_HISTORY;t++){
-								inplacehist[t]=ifctele_getHistPlaceIndex(ifct_element, t);
+								inplacehist[t]=ifctele_getHistPlaceIndex(ifct_element, t); //환자정보를 배열에 저장 
 							}
 							inplacehist[j]=ifctele_getHistPlaceIndex(ifct_element, j);
-							outnumber=ifctele_getIndex(ifct_element);
-							count++;
+							outnumber=ifctele_getIndex(ifct_element); //입력한 장소가 있는 환자 번호 저장 
+							count++; //입력한 장소가 환자정보에 있을 때를 표시 
 						}
 							
-						else if(ifctele_getIndex(ifct_element)==outnumber){
-							inplacehist[j]=ifctele_getHistPlaceIndex(ifct_element, j);
-							
+						else if(ifctele_getIndex(ifct_element)==outnumber){ //입력한 장소가 포함된 환자정보에 있는 다른 장소 저장 
+							inplacehist[j]=ifctele_getHistPlaceIndex(ifct_element, j); 		
 						}
-						else{
+						
+						else{ //입력한 장소가 환자정보에 없을 때 
 							count=0;
 							continue;
 						}		
 					}
 						
-					if(count==0){
+					if(count==0){ //입력한 장소가 환자정보에 없을 때  
 						continue;
 					}
-					else if(count!=0){
-						printf("%i",count);
+					else if(count!=0){  //입력한 장소가 환자 정보에 있을 때 환자 정보 순차적으로 출력 
+						printf("index: %i\n",i); //ifctele_getIndex(ifct_element)
 						printf("age: %i\n",ifctele_getAge(ifct_element));
 						printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
-					}
-					
-					for(j=0;j<N_HISTORY;j++){
-			
-						if(count!=0){
+						for(j=0;j<N_HISTORY;j++){
 							printf("move: %s\n",ifctele_getPlaceName(inplacehist[j]));
 						}
-						else{
-							break;
-						}
 					}
-					count=0;
+
+					count=0; //다음 환자정보에서 입력한 장소가 있는지 구별하기 위해서 count를 0으로 돌려줌 
 				}
-            	
+     	
                 break;
                 
             case MENU_AGE:
@@ -267,16 +263,16 @@ int main(int argc, const char * argv[]) {
                 scanf("%i",&age_min);              
                 printf("나이의 최댓값 입력:");
 				scanf("%i",&age_max); 
-//				int i;
+
 				for(i=0;i<ifctdb_len();i++){
 					ifct_element=ifctdb_getData(i);
-					if(age_min<=ifctele_getAge(ifct_element)){
-						if(age_max>=ifctele_getAge(ifct_element)){
+					if(age_min<=ifctele_getAge(ifct_element)){ //최솟값 이상이면서 
+						if(age_max>=ifctele_getAge(ifct_element)){ //최댓값 이하일 때 환자 정보출력 
+							printf("index: %i\n",i);
 							printf("age: %i\n",ifctele_getAge(ifct_element));
-							printf("time: %i\n",ifctele_getinfestedTime(ifct_element));
-							
+							printf("time: %i\n",ifctele_getinfestedTime(ifct_element));						
 							int j;
-							for(j=0;j<N_HISTORY;j++){
+							for(j=0;j<N_HISTORY;j++){ //장소 출력 
 								printf("move: %s\n",ifctele_getPlaceName(ifctele_getHistPlaceIndex(ifct_element,j)));
 							}
 						}
@@ -287,7 +283,7 @@ int main(int argc, const char * argv[]) {
                 
             case MENU_TRACK:
             	//지정된 롼자를 시작으로 전파자와 감염당한 시점 및 장소를 순차적 출력, 최종전파자 출력 
-            	printf("현재환자를 입력하시오:");
+            	printf("환자 번호 입력:");
             	scanf("%i",&innumber2); 
 		
 				while(innumber2!=-1){
@@ -296,28 +292,24 @@ int main(int argc, const char * argv[]) {
 					
 					if(firstpeople!=-1){
 						printf("%i번환자는 %i번 환자에게 전파됨\n",innumber2,firstpeople);
-						int i;
+						
 						for(i=0;i<ifctdb_len();i++){ //감염당한 시점과 장소 출력을 위한 반복문 
 							ifct_element=ifctdb_getData(i);
 							metdate=isMet(innumber2,i);
 	
-							if(metdate>0){ //만났다면 	
-							
+							if(metdate>0){ //만났다면 감염시점과 감염장소 출력 
 								printf("%i일에 %s에서 감염됨\n",metdate,ifctele_getPlaceName(ifctele_getHistPlaceIndex(now_element,convertTimeToIndex(metdate,ifctele_getinfestedTime(now_element)))));
 								break;		
-							}
-		
-							else{
-								firstpeople1=-1; //전파자가 없는 경우(최초전파자) 
-							}		
+							}	
 						}
 						
 						innumber2=firstpeople;
 					}
-					else{
+					
+					else{ // 전파자가 없는경우 
 						firstpeople=innumber2;
 						innumber2=-1; //최초전파자
-						printf("%i번 환자는 최초전파자이다\n",firstpeople); 
+						printf("%i번 환자는 최초전파자이다\n",firstpeople); //최종전파자 출력 
 					}
 		
 				} 
